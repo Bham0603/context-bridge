@@ -1,4 +1,4 @@
-/* ContextBridge Popup — Premium Dark Theme */
+/* ContextBridge Popup — Premium Dark Theme v2.0 */
 
 * {
   margin: 0;
@@ -31,13 +31,13 @@
   --color-claude: #d97706;
   --color-gemini: #4285f4;
   --color-perplexity: #20b8cd;
-  --color-copilot: #7c3aed;
+  --color-deepseek: #4D6BFE;
 }
 
 body {
   width: 380px;
   min-height: 480px;
-  max-height: 560px;
+  max-height: 580px;
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -269,7 +269,7 @@ body {
 .platform-badge.claude { background: var(--color-claude); }
 .platform-badge.gemini { background: var(--color-gemini); }
 .platform-badge.perplexity { background: var(--color-perplexity); }
-.platform-badge.copilot { background: var(--color-copilot); }
+.platform-badge.deepseek { background: var(--color-deepseek); }
 
 .session-info {
   flex: 1;
@@ -296,6 +296,7 @@ body {
 
 .session-actions {
   display: none;
+  flex-wrap: wrap;
   gap: 4px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
@@ -314,7 +315,8 @@ body {
 
 .session-actions button {
   flex: 1;
-  padding: 7px 10px;
+  min-width: calc(50% - 4px);
+  padding: 7px 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-tertiary);
@@ -333,6 +335,18 @@ body {
   background: var(--bg-hover);
   color: var(--text-primary);
   border-color: var(--border-active);
+}
+
+.session-actions .btn-route:hover {
+  background: rgba(6, 182, 212, 0.1);
+  color: var(--cyan);
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.session-actions .btn-critique:hover {
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--orange);
+  border-color: rgba(249, 115, 22, 0.3);
 }
 
 .session-actions .btn-delete:hover {
@@ -390,7 +404,7 @@ body {
   color: var(--text-muted);
 }
 
-/* ─── Modal ──────────────────────────────────────────────────────────────────── */
+/* ─── Modal (shared) ─────────────────────────────────────────────────────────── */
 
 .modal-overlay {
   display: none;
@@ -498,4 +512,214 @@ body {
 
 .btn-copy.copied {
   background: linear-gradient(135deg, var(--green), #16a34a);
+}
+
+/* ─── Route Modal ────────────────────────────────────────────────────────────── */
+
+.route-modal-body {
+  padding: 16px;
+}
+
+.route-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.platform-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.platform-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.platform-chip .chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+  transition: all 0.2s;
+}
+
+.platform-chip:hover {
+  border-color: var(--border-active);
+  color: var(--text-primary);
+}
+
+.platform-chip.chatgpt:hover, .platform-chip.chatgpt.selected {
+  border-color: var(--color-chatgpt);
+  background: rgba(16, 163, 127, 0.1);
+  color: var(--color-chatgpt);
+}
+.platform-chip.chatgpt:hover .chip-dot, .platform-chip.chatgpt.selected .chip-dot {
+  background: var(--color-chatgpt);
+  opacity: 1;
+}
+
+.platform-chip.claude:hover, .platform-chip.claude.selected {
+  border-color: var(--color-claude);
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--color-claude);
+}
+.platform-chip.claude:hover .chip-dot, .platform-chip.claude.selected .chip-dot {
+  background: var(--color-claude);
+  opacity: 1;
+}
+
+.platform-chip.gemini:hover, .platform-chip.gemini.selected {
+  border-color: var(--color-gemini);
+  background: rgba(66, 133, 244, 0.1);
+  color: var(--color-gemini);
+}
+.platform-chip.gemini:hover .chip-dot, .platform-chip.gemini.selected .chip-dot {
+  background: var(--color-gemini);
+  opacity: 1;
+}
+
+.platform-chip.perplexity:hover, .platform-chip.perplexity.selected {
+  border-color: var(--color-perplexity);
+  background: rgba(32, 184, 205, 0.1);
+  color: var(--color-perplexity);
+}
+.platform-chip.perplexity:hover .chip-dot, .platform-chip.perplexity.selected .chip-dot {
+  background: var(--color-perplexity);
+  opacity: 1;
+}
+
+.platform-chip.deepseek:hover, .platform-chip.deepseek.selected {
+  border-color: var(--color-deepseek);
+  background: rgba(77, 107, 254, 0.1);
+  color: var(--color-deepseek);
+}
+.platform-chip.deepseek:hover .chip-dot, .platform-chip.deepseek.selected .chip-dot {
+  background: var(--color-deepseek);
+  opacity: 1;
+}
+
+.platform-chip.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.route-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.route-status.routing {
+  color: var(--cyan);
+}
+
+.route-status.success {
+  color: var(--green);
+}
+
+.route-status.error {
+  color: var(--red);
+}
+
+/* ─── Critique Modal ─────────────────────────────────────────────────────────── */
+
+.critique-preview-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.preview-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.critique-preview {
+  max-height: 160px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+}
+
+.critique-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.critique-actions .btn-copy {
+  flex: 1;
+  padding: 8px;
+  font-size: 12px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.critique-actions .btn-copy:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  box-shadow: none;
+}
+
+.btn-route-critique {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, var(--orange), #ea580c);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-route-critique:hover {
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ─── Loading Spinner ────────────────────────────────────────────────────────── */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
 }

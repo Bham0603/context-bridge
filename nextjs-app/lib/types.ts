@@ -15,7 +15,7 @@ export interface Session {
   summary?: string;
 }
 
-export type PlatformType = 'chatgpt' | 'claude' | 'gemini' | 'perplexity' | 'copilot';
+export type PlatformType = 'chatgpt' | 'claude' | 'gemini' | 'perplexity' | 'deepseek';
 
 export const PLATFORM_META: Record<PlatformType, { label: string; color: string; icon: string; url: string }> = {
   chatgpt: {
@@ -42,10 +42,10 @@ export const PLATFORM_META: Record<PlatformType, { label: string; color: string;
     icon: '🔍',
     url: 'https://perplexity.ai',
   },
-  copilot: {
-    label: 'Copilot',
-    color: '#7c3aed',
-    icon: '🚀',
-    url: 'https://copilot.microsoft.com',
+  deepseek: {
+    label: 'DeepSeek',
+    color: '#4D6BFE',
+    icon: '🔮',
+    url: 'https://chat.deepseek.com',
   },
 };

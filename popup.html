@@ -26,7 +26,7 @@
       </div>
       <div>
         <h1 class="header-title">ContextBridge</h1>
-        <p class="header-tagline">Switch AI without starting over</p>
+        <p class="header-tagline">Route · Critique · Switch AI instantly</p>
       </div>
     </div>
   </header>
@@ -77,7 +77,7 @@
       </svg>
       Open Dashboard
     </a>
-    <span class="version">v1.0.0</span>
+    <span class="version">v2.0.0</span>
   </footer>
 
   <!-- Resume Prompt Modal -->
@@ -96,6 +96,82 @@
           </svg>
           Copy to Clipboard
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Route-To Modal -->
+  <div class="modal-overlay" id="route-modal-overlay">
+    <div class="modal route-modal">
+      <div class="modal-header">
+        <h3 id="route-modal-title">Route to AI Platform</h3>
+        <button class="modal-close" id="route-modal-close">&times;</button>
+      </div>
+      <div class="route-modal-body">
+        <p class="route-desc" id="route-desc">Select a platform to send the resume prompt to:</p>
+        <div class="platform-picker" id="platform-picker">
+          <button class="platform-chip chatgpt" data-platform="chatgpt">
+            <span class="chip-dot"></span>ChatGPT
+          </button>
+          <button class="platform-chip claude" data-platform="claude">
+            <span class="chip-dot"></span>Claude
+          </button>
+          <button class="platform-chip gemini" data-platform="gemini">
+            <span class="chip-dot"></span>Gemini
+          </button>
+          <button class="platform-chip perplexity" data-platform="perplexity">
+            <span class="chip-dot"></span>Perplexity
+          </button>
+          <button class="platform-chip deepseek" data-platform="deepseek">
+            <span class="chip-dot"></span>DeepSeek
+          </button>
+        </div>
+        <div class="route-status" id="route-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Critique Modal -->
+  <div class="modal-overlay" id="critique-modal-overlay">
+    <div class="modal critique-modal">
+      <div class="modal-header">
+        <h3>Cross-AI Critique</h3>
+        <button class="modal-close" id="critique-modal-close">&times;</button>
+      </div>
+      <div class="route-modal-body">
+        <p class="route-desc">Choose which AI should critique this response:</p>
+        <div class="platform-picker" id="critique-platform-picker">
+          <button class="platform-chip chatgpt" data-platform="chatgpt">
+            <span class="chip-dot"></span>ChatGPT
+          </button>
+          <button class="platform-chip claude" data-platform="claude">
+            <span class="chip-dot"></span>Claude
+          </button>
+          <button class="platform-chip gemini" data-platform="gemini">
+            <span class="chip-dot"></span>Gemini
+          </button>
+          <button class="platform-chip perplexity" data-platform="perplexity">
+            <span class="chip-dot"></span>Perplexity
+          </button>
+          <button class="platform-chip deepseek" data-platform="deepseek">
+            <span class="chip-dot"></span>DeepSeek
+          </button>
+        </div>
+        <div class="critique-preview-section" id="critique-preview-section" style="display:none;">
+          <h4 class="preview-label">Generated Critique Prompt:</h4>
+          <pre class="prompt-display critique-preview" id="critique-preview"></pre>
+          <div class="critique-actions">
+            <button class="btn-copy" id="critique-copy-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <button class="btn-route-critique" id="btn-route-critique">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+              Send to <span id="critique-target-label">AI</span>
+            </button>
+          </div>
+        </div>
+        <div class="route-status" id="critique-status"></div>
       </div>
     </div>
   </div>

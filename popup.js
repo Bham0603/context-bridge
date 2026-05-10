@@ -1,12 +1,12 @@
-// ContextBridge Popup — Logic
-// Handles platform detection, capture triggering, session display, and resume prompt modal.
+// ContextBridge Popup — Logic v2.0
+// Handles platform detection, capture, session display, routing, and critique.
 
 const PLATFORM_LABELS = {
   chatgpt: 'ChatGPT',
   claude: 'Claude',
   gemini: 'Gemini',
   perplexity: 'Perplexity',
-  copilot: 'Copilot',
+  deepseek: 'DeepSeek',
 };
 
 const PLATFORM_ABBREV = {
@@ -14,7 +14,7 @@ const PLATFORM_ABBREV = {
   claude: 'CL',
   gemini: 'GEM',
   perplexity: 'PPX',
-  copilot: 'COP',
+  deepseek: 'DSK',
 };
 
 // ─── DOM Refs ──────────────────────────────────────────────────────────────────
@@ -26,12 +26,36 @@ const captureBtnText = document.getElementById('capture-btn-text');
 const sessionsList = document.getElementById('sessions-list');
 const sessionsCount = document.getElementById('sessions-count');
 const emptyState = document.getElementById('empty-state');
+
+// Resume prompt modal
 const modalOverlay = document.getElementById('modal-overlay');
 const modalClose = document.getElementById('modal-close');
 const promptDisplay = document.getElementById('prompt-display');
 const btnCopy = document.getElementById('btn-copy');
 
+// Route modal
+const routeModalOverlay = document.getElementById('route-modal-overlay');
+const routeModalClose = document.getElementById('route-modal-close');
+const routeModalTitle = document.getElementById('route-modal-title');
+const routeDesc = document.getElementById('route-desc');
+const platformPicker = document.getElementById('platform-picker');
+const routeStatus = document.getElementById('route-status');
+
+// Critique modal
+const critiqueModalOverlay = document.getElementById('critique-modal-overlay');
+const critiqueModalClose = document.getElementById('critique-modal-close');
+const critiquePlatformPicker = document.getElementById('critique-platform-picker');
+const critiquePreviewSection = document.getElementById('critique-preview-section');
+const critiquePreview = document.getElementById('critique-preview');
+const critiqueCopyBtn = document.getElementById('critique-copy-btn');
+const btnRouteCritique = document.getElementById('btn-route-critique');
+const critiqueTargetLabel = document.getElementById('critique-target-label');
+const critiqueStatus = document.getElementById('critique-status');
+
 let currentPlatform = null;
+let activeRouteSessionId = null;
+let activeCritiqueSessionId = null;
+let activeCritiqueTarget = null;
 
 // ─── Init ──────────────────────────────────────────────────────────────────────
 
@@ -95,14 +119,13 @@ function loadSessions() {
   chrome.runtime.sendMessage({ type: 'GET_SESSIONS' }, (response) => {
     const sessions = response?.sessions || [];
     sessionsCount.textContent = sessions.length;
-    renderSessions(sessions.slice(0, 8)); // Show last 8 in popup
+    renderSessions(sessions.slice(0, 8));
   });
 }
 
 function renderSessions(sessions) {
   if (sessions.length === 0) {
     emptyState.style.display = 'flex';
-    // Remove non-empty-state children
     Array.from(sessionsList.children).forEach((child) => {
       if (child !== emptyState) child.remove();
     });
@@ -110,7 +133,6 @@ function renderSessions(sessions) {
   }
 
   emptyState.style.display = 'none';
-  // Clear old session cards
   Array.from(sessionsList.children).forEach((child) => {
     if (child !== emptyState) child.remove();
   });
@@ -144,7 +166,15 @@ function createSessionCard(session, index) {
     <div class="session-actions">
       <button class="btn-prompt" data-id="${session.id}">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Resume Prompt
+        Resume
+      </button>
+      <button class="btn-route" data-id="${session.id}" data-platform="${session.platform}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        Route To
+      </button>
+      <button class="btn-critique" data-id="${session.id}" data-platform="${session.platform}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Critique
       </button>
       <button class="btn-delete" data-id="${session.id}">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
@@ -162,6 +192,18 @@ function createSessionCard(session, index) {
   card.querySelector('.btn-prompt').addEventListener('click', (e) => {
     e.stopPropagation();
     showResumePrompt(session.id);
+  });
+
+  // Route-to button
+  card.querySelector('.btn-route').addEventListener('click', (e) => {
+    e.stopPropagation();
+    showRouteModal(session.id, session.platform);
+  });
+
+  // Critique button
+  card.querySelector('.btn-critique').addEventListener('click', (e) => {
+    e.stopPropagation();
+    showCritiqueModal(session.id, session.platform);
   });
 
   // Delete button
@@ -189,26 +231,154 @@ modalClose.addEventListener('click', () => {
 });
 
 modalOverlay.addEventListener('click', (e) => {
-  if (e.target === modalOverlay) {
-    modalOverlay.classList.remove('active');
-  }
+  if (e.target === modalOverlay) modalOverlay.classList.remove('active');
 });
 
 btnCopy.addEventListener('click', () => {
-  const text = promptDisplay.textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    btnCopy.classList.add('copied');
-    btnCopy.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-      Copied!
-    `;
-    setTimeout(() => {
-      btnCopy.classList.remove('copied');
-      btnCopy.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copy to Clipboard
-      `;
-    }, 2000);
+  copyAndFeedback(promptDisplay.textContent, btnCopy);
+});
+
+// ─── Route Modal ───────────────────────────────────────────────────────────────
+
+function showRouteModal(sessionId, sourcePlatform) {
+  activeRouteSessionId = sessionId;
+  routeStatus.textContent = '';
+  routeStatus.className = 'route-status';
+
+  // Disable the source platform chip (can't route to same platform)
+  platformPicker.querySelectorAll('.platform-chip').forEach((chip) => {
+    chip.classList.remove('disabled', 'selected');
+    if (chip.dataset.platform === sourcePlatform) {
+      chip.classList.add('disabled');
+    }
+  });
+
+  routeModalOverlay.classList.add('active');
+}
+
+routeModalClose.addEventListener('click', () => {
+  routeModalOverlay.classList.remove('active');
+});
+
+routeModalOverlay.addEventListener('click', (e) => {
+  if (e.target === routeModalOverlay) routeModalOverlay.classList.remove('active');
+});
+
+// Handle platform chip clicks for routing
+platformPicker.addEventListener('click', (e) => {
+  const chip = e.target.closest('.platform-chip');
+  if (!chip || chip.classList.contains('disabled')) return;
+
+  const targetPlatform = chip.dataset.platform;
+
+  // Visual feedback
+  platformPicker.querySelectorAll('.platform-chip').forEach((c) => c.classList.remove('selected'));
+  chip.classList.add('selected');
+
+  // Show routing status
+  routeStatus.className = 'route-status routing';
+  routeStatus.innerHTML = `<span class="spinner"></span> Routing to ${PLATFORM_LABELS[targetPlatform]}...`;
+
+  // Send route command
+  chrome.runtime.sendMessage({
+    type: 'ROUTE_TO_PLATFORM',
+    sessionId: activeRouteSessionId,
+    targetPlatform,
+  }, (response) => {
+    if (response?.success) {
+      routeStatus.className = 'route-status success';
+      routeStatus.textContent = `✓ Prompt injected into ${PLATFORM_LABELS[targetPlatform]}`;
+      setTimeout(() => { routeModalOverlay.classList.remove('active'); }, 1500);
+    } else {
+      routeStatus.className = 'route-status success';
+      routeStatus.textContent = `✓ Tab opened — paste prompt if needed`;
+      setTimeout(() => { routeModalOverlay.classList.remove('active'); }, 2000);
+    }
+  });
+});
+
+// ─── Critique Modal ────────────────────────────────────────────────────────────
+
+function showCritiqueModal(sessionId, sourcePlatform) {
+  activeCritiqueSessionId = sessionId;
+  activeCritiqueTarget = null;
+  critiquePreviewSection.style.display = 'none';
+  critiqueStatus.textContent = '';
+  critiqueStatus.className = 'route-status';
+
+  // Disable the source platform chip
+  critiquePlatformPicker.querySelectorAll('.platform-chip').forEach((chip) => {
+    chip.classList.remove('disabled', 'selected');
+    if (chip.dataset.platform === sourcePlatform) {
+      chip.classList.add('disabled');
+    }
+  });
+
+  critiqueModalOverlay.classList.add('active');
+}
+
+critiqueModalClose.addEventListener('click', () => {
+  critiqueModalOverlay.classList.remove('active');
+});
+
+critiqueModalOverlay.addEventListener('click', (e) => {
+  if (e.target === critiqueModalOverlay) critiqueModalOverlay.classList.remove('active');
+});
+
+// Handle platform chip clicks for critique
+critiquePlatformPicker.addEventListener('click', (e) => {
+  const chip = e.target.closest('.platform-chip');
+  if (!chip || chip.classList.contains('disabled')) return;
+
+  const targetPlatform = chip.dataset.platform;
+  activeCritiqueTarget = targetPlatform;
+
+  // Visual feedback
+  critiquePlatformPicker.querySelectorAll('.platform-chip').forEach((c) => c.classList.remove('selected'));
+  chip.classList.add('selected');
+
+  // Update label
+  critiqueTargetLabel.textContent = PLATFORM_LABELS[targetPlatform];
+
+  // Generate critique preview
+  chrome.runtime.sendMessage({
+    type: 'GET_CRITIQUE_PROMPT',
+    sessionId: activeCritiqueSessionId,
+    targetPlatform,
+  }, (response) => {
+    if (response?.prompt) {
+      critiquePreview.textContent = response.prompt;
+      critiquePreviewSection.style.display = 'block';
+    }
+  });
+});
+
+// Copy critique
+critiqueCopyBtn.addEventListener('click', () => {
+  copyAndFeedback(critiquePreview.textContent, critiqueCopyBtn);
+});
+
+// Route critique to target
+btnRouteCritique.addEventListener('click', () => {
+  if (!activeCritiqueTarget || !activeCritiqueSessionId) return;
+
+  critiqueStatus.className = 'route-status routing';
+  critiqueStatus.innerHTML = `<span class="spinner"></span> Sending critique to ${PLATFORM_LABELS[activeCritiqueTarget]}...`;
+
+  chrome.runtime.sendMessage({
+    type: 'ROUTE_CRITIQUE',
+    sessionId: activeCritiqueSessionId,
+    targetPlatform: activeCritiqueTarget,
+  }, (response) => {
+    if (response?.success) {
+      critiqueStatus.className = 'route-status success';
+      critiqueStatus.textContent = `✓ Critique sent to ${PLATFORM_LABELS[activeCritiqueTarget]}`;
+      setTimeout(() => { critiqueModalOverlay.classList.remove('active'); }, 1500);
+    } else {
+      critiqueStatus.className = 'route-status success';
+      critiqueStatus.textContent = `✓ Tab opened — review critique prompt`;
+      setTimeout(() => { critiqueModalOverlay.classList.remove('active'); }, 2000);
+    }
   });
 });
 
@@ -229,6 +399,21 @@ function deleteSession(sessionId, cardElement) {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
+
+function copyAndFeedback(text, button) {
+  navigator.clipboard.writeText(text).then(() => {
+    const origHTML = button.innerHTML;
+    button.classList.add('copied');
+    button.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Copied!
+    `;
+    setTimeout(() => {
+      button.classList.remove('copied');
+      button.innerHTML = origHTML;
+    }, 2000);
+  });
+}
 
 function escapeHtml(text) {
   const div = document.createElement('div');
