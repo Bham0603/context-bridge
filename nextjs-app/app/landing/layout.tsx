@@ -1,25 +1,21 @@
 import type { Metadata } from 'next';
-import './globals.css';
 
 export const metadata: Metadata = {
   title: 'ContextBridge — Switch AI Platforms Without Starting Over',
   description:
     'Free Chrome extension to capture, route, and critique AI conversations across ChatGPT, Claude, Gemini, Perplexity & DeepSeek. Never lose context again.',
   openGraph: {
-    title: 'ContextBridge',
-    description: 'Switch AI platforms without starting over.',
+    title: 'ContextBridge — Switch AI Platforms Without Starting Over',
+    description:
+      'Free Chrome extension to capture, route, and critique AI conversations across ChatGPT, Claude, Gemini, Perplexity & DeepSeek.',
     type: 'website',
   },
 };
 
-export default function RootLayout({
+export default function LandingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
+  return <>{children}</>;
 }
